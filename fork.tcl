@@ -272,5 +272,5 @@ namespace eval fork {
   }
 }
 
-package provide fork 0.1
+package provide fork 0.2
 
