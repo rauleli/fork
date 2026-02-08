@@ -214,6 +214,62 @@ namespace eval fork {
       namespace delete [namespace current]
     }
   }
+  ##########
+  #
+  # Start of ToDo implementations
+  #
+
+  proc _cleanup {} {
+    foreach child [namespace children [namespace current]::child] {
+        catch { $child destroy }
+    }
+  }
+
+  proc listen_signals {} {
+    package require Tclx
+    signal trap SIGTERM [namespace current]::_cleanup
+    signal trap SIGINT  [namespace current]::_cleanup
+    signal trap SIGQUIT [namespace current]::_cleanup
+  }
+
+  proc broadcast {msg} {
+    foreach child [namespace children [namespace current]::child] {
+      catch { $child send $msg }
+    }
+  }
+
+  proc stats {} {
+    set active [llength [namespace children [namespace current]::child]]
+    return "Active children: $active"
+  }
+
+  proc _monitor_child {pid} {
+      if {[catch {kill -0 $pid}]} {
+          # Process might be dead.
+          # The pipe EOF handler should usually handle this, but this is a backup.
+          return 0
+      }
+      return 1
+  }
+
+  proc _check_children {} {
+      variable monitor_interval
+      foreach child [namespace children [namespace current]::child] {
+          set pid [$child cget childpid]
+          if {$pid != 0} {
+             if {![_monitor_child $pid]} {
+                 # Force destroy if dead (triggers onclose if not already triggered)
+                 catch { $child destroy }
+             }
+          }
+      }
+      after $monitor_interval [namespace current]::_check_children
+  }
+
+  proc monitor {{interval 5000}} {
+      variable monitor_interval $interval
+      _check_children
+  }
 }
 
 package provide fork 0.1
