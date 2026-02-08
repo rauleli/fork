@@ -178,7 +178,8 @@ vwait forever
 
 ## Version History
 
-- **v0.1**: Initial release with basic fork/pipe management
+- **v0.2**: (2026-02-08) Added signal handling, broadcast, monitoring, and refined technical manual.
+- **v0.1**: (2017-04-26) Initial release with basic fork/pipe management
 
 ## License
 
